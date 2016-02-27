@@ -1,0 +1,79 @@
+package com.company.life_simulator.world.quadtree;
+
+import java.util.Objects;
+
+public class Vector {
+    private final double x;
+    private final double y;
+
+    public Vector(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public Vector(Point from, Point to)
+    {
+        this.x = to.getX() - from.getX();
+        this.y = to.getY() - from.getY();
+    }
+
+    public double getX() {
+        return x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public static Vector getUnitVector(double angle)
+    {
+        double cos = Math.cos(angle);
+        return new Vector(cos, Math.sqrt(1 - cos * cos));
+    }
+
+    public double length() {
+        return Math.sqrt(x*x + y*y);
+    }
+
+    public double squareLength() {
+        return (x*x + y*y);
+    }
+
+    public Vector scale(double scaleFactor) {
+        return Vector.scale(this, scaleFactor);
+    }
+
+    public static Vector scale(final Vector vector, double scalingFactor) {
+        return new Vector(vector.x * scalingFactor, vector.y * scalingFactor);
+    }
+
+    public double angle() {
+        return Math.atan2(y, x);
+    }
+
+    public Vector rotate(double newAngle)
+    {
+        double length = this.length();
+
+        return new Vector(length * Math.cos(newAngle), length * Math.sin(newAngle));
+    }
+
+    @Override
+    public String toString() {
+        return String.format("{%s, %s}", x, y);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Vector vector = (Vector) o;
+        return Double.compare(vector.x, x) == 0 &&
+                Double.compare(vector.y, y) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+}

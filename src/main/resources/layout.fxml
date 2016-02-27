@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.Canvas?>
+
+<?import com.company.life_simulator.ui.ResizableCanvas?>
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="420.0" prefWidth="620.0" style="-fx-background-color: gray;" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.company.life_simulator.ui.window.Controller">
+    <center>
+      <Pane fx:id="pane" BorderPane.alignment="CENTER">
+         <children>
+              <ResizableCanvas fx:id="canvas" height="200.0" width="200.0" BorderPane.alignment="CENTER" />
+         </children>
+      </Pane>
+    </center>
+    <right>
+        <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+            <children>
+                <Label text="0" fx:id="tickLabel"/>
+                <Label text="0" fx:id="dwellersLabel"/>
+                <ToggleButton mnemonicParsing="false" text="Play" fx:id="playButton"/>
+                <Button mnemonicParsing="false" text="Reset" fx:id="resetButton"/>
+            </children>
+        </VBox>
+    </right>
+</BorderPane>
