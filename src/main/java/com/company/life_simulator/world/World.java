@@ -51,7 +51,7 @@ public class World {
         if (!size.isContains(dweller.getPosition()))
         {
 
-            dweller.setPosition(new Point((dweller.getPosition().getX() + size.getWidth()) % size.getWidth(), (dweller.getPosition().getY() + size.getWidth()) % size.getHeight()));
+            dweller.setPosition(new Point((dweller.getPosition().getX() + size.getWidth()) % size.getWidth(), (dweller.getPosition().getY() + size.getHeight()) % size.getHeight()));
         }
         dwellers.put(dweller.getPosition(), dweller);
     }
