@@ -1,15 +1,18 @@
 package com.company.life_simulator.world.quadtree;
 
-import java.util.EnumMap;
+import java.util.stream.Stream;
 
 public class Node<T> {
 
-    private Rectangle rect;
-    private Node<T> opt_parent;
+    private final Rectangle rect;
+    private final Node<T> opt_parent;
     private Point point;
     private NodeType nodetype = NodeType.EMPTY;
-    private EnumMap<Quadrant, Node<T>> childNodes = new EnumMap<>(Quadrant.class);
     private T value;
+    private Node<T> nwNode;
+    private Node<T> neNode;
+    private Node<T> swNode;
+    private Node<T> seNode;
 
     /**
      * Constructs a new quad tree node.
@@ -32,10 +35,6 @@ public class Node<T> {
 
     public Node<T> getParent() {
         return opt_parent;
-    }
-
-    public void setParent(Node<T> opt_parent) {
-        this.opt_parent = opt_parent;
     }
 
     public void setPoint(Point point, T payload) {
@@ -66,17 +65,36 @@ public class Node<T> {
         double halfWidth = rect.getWidth() / 2;
         double halfHeight = rect.getHeight() / 2;
 
-        childNodes.put(Quadrant.NW, new Node<>(new Rectangle(point, halfWidth, halfHeight), this));
-        childNodes.put(Quadrant.NE, new Node<>(new Rectangle(point.delta(halfWidth, 0), halfWidth, halfHeight), this));
-        childNodes.put(Quadrant.SW, new Node<>(new Rectangle(point.delta(0, halfHeight), halfWidth, halfHeight), this));
-        childNodes.put(Quadrant.SE, new Node<>(new Rectangle(point.delta(halfWidth, halfHeight), halfWidth, halfHeight), this));
+        this.nwNode = new Node<>(new Rectangle(point, halfWidth, halfHeight), this);
+        this.neNode = new Node<>(new Rectangle(point.delta(halfWidth, 0), halfWidth, halfHeight), this);
+        this.swNode = new Node<>(new Rectangle(point.delta(0, halfHeight), halfWidth, halfHeight), this);
+        this.seNode = new Node<>(new Rectangle(point.delta(halfWidth, halfHeight), halfWidth, halfHeight), this);
     }
 
     public void clear()
     {
         nodetype = NodeType.EMPTY;
-        childNodes.clear();
+        this.nwNode = null;
+        this.neNode = null;
+        this.swNode = null;
+        this.seNode = null;
         value = null;
+    }
+
+    public Node<T> getNwNode() {
+        return nwNode;
+    }
+
+    public Node<T> getNeNode() {
+        return neNode;
+    }
+
+    public Node<T> getSwNode() {
+        return swNode;
+    }
+
+    public Node<T> getSeNode() {
+        return seNode;
     }
 
     public T getValue() {
@@ -87,13 +105,14 @@ public class Node<T> {
     {
         Point middle = rect.getCenter();
         if (point.getX() < middle.getX()) {
-            return point.getY() < middle.getY() ? childNodes.get(Quadrant.NW) : childNodes.get(Quadrant.SW);
+            return point.getY() < middle.getY() ? nwNode : swNode;
         } else {
-            return point.getY() < middle.getY() ? childNodes.get(Quadrant.NE) : childNodes.get(Quadrant.SE);
+            return point.getY() < middle.getY() ? neNode : seNode;
         }
     }
 
-    public Node<T> getChildNode(Quadrant quadrant) {
-        return childNodes.get(quadrant);
+    public Stream<Node<T>> getChildNodes()
+    {
+        return Stream.of(neNode, seNode, swNode, nwNode);
     }
 }

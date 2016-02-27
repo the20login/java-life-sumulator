@@ -1,7 +1,8 @@
 package com.company.life_simulator.world.quadtree;
-import java.util.Arrays;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -130,45 +131,63 @@ public class QuadTree<T> {
     }
 
     public Stream<T> getValues() {
-        return this.traverse(this.root).map(Node::getValue);
+        Stream.Builder<Node<T>> streamBuilder = Stream.builder();
+        this.traverse(this.root, streamBuilder::add);
+        return streamBuilder.build()
+                .map(Node::getValue);
     }
 
     public Stream<T> searchWithin(Rectangle rectangle) {
-        return this.navigate(this.root, rectangle)
-            .filter(node -> rectangle.isContains(node.getPoint()))
+        Stream.Builder<Node<T>> streamBuilder = Stream.builder();
+        this.navigate(this.root, rectangle, streamBuilder::add);
+        return streamBuilder.build()
             .map(Node::getValue);
     }
 
     public Stream<T> searchWithin(Point point, double radius) {
-        return this.navigate(this.root, point, radius)
-                .filter(node -> node.getPoint().withinCircle(point, radius))
-                .map(Node::getValue);
+        Stream.Builder<Node<T>> streamBuilder = Stream.builder();
+        this.navigate(this.root, point, radius, streamBuilder::add);
+        return streamBuilder.build()
+            .map(Node::getValue);
     }
 
-    private Stream<Node<T>> navigate(Node<T> node, Point point, double radius) {
+    private void navigate(Node<T> node, Point point, double radius, Consumer<Node<T>> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
-                return Stream.of(node);
+                if (node.getPoint().withinCircle(point, radius))
+                    consumer.accept(node);
+                break;
             case POINTER:
-                return Arrays.stream(Quadrant.values())
-                        .map(node::getChildNode)
-                        .filter(childNode -> childNode.getRectangle().isIntersect(point, radius))
-                        .flatMap(childNode -> this.navigate(childNode, point, radius));
+                //looks ugly, but works 1.5 times faster, than enumMap/Array/Stream
+                if (node.getNeNode().getRectangle().isIntersect(point, radius))
+                    this.navigate(node.getNeNode(), point, radius, consumer);
+                if (node.getSeNode().getRectangle().isIntersect(point, radius))
+                    this.navigate(node.getSeNode(), point, radius, consumer);
+                if (node.getSwNode().getRectangle().isIntersect(point, radius))
+                    this.navigate(node.getSwNode(), point, radius, consumer);
+                if (node.getNwNode().getRectangle().isIntersect(point, radius))
+                    this.navigate(node.getNwNode(), point, radius, consumer);
+                break;
         }
-        return Stream.empty();
     }
 
-    private Stream<Node<T>> navigate(Node<T> node, Rectangle rectangle) {
+    private void navigate(Node<T> node, Rectangle rectangle, Consumer<Node<T>> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
-                return Stream.of(node);
+                if (rectangle.isContains(node.getPoint()))
+                    consumer.accept(node);
+                break;
             case POINTER:
-                return Arrays.stream(Quadrant.values())
-                        .map(node::getChildNode)
-                        .filter(childNode -> childNode.getRectangle().isIntersect(rectangle))
-                        .flatMap(childNode -> this.navigate(childNode, rectangle));
+                //looks ugly, but works 1.5 times faster, than enumMap/Array/Stream
+                if (rectangle.isIntersect(node.getNeNode().getRectangle()))
+                    this.navigate(node.getNeNode(), rectangle, consumer);
+                if (rectangle.isIntersect(node.getSeNode().getRectangle()))
+                    this.navigate(node.getSeNode(), rectangle, consumer);
+                if (rectangle.isIntersect(node.getSwNode().getRectangle()))
+                    this.navigate(node.getSwNode(), rectangle, consumer);
+                if (rectangle.isIntersect(node.getNwNode().getRectangle()))
+                    this.navigate(node.getNwNode(), rectangle, consumer);
         }
-        return Stream.empty();
     }
 
     /**
@@ -180,8 +199,7 @@ public class QuadTree<T> {
         // This is inefficient as the clone needs to recalculate the structure of the
         // tree, even though we know it already.  But this is easier and can be
         // optimized when/if needed.
-        this.traverse(this.root)
-                .forEach(node -> clone.put(node.getPoint(), node.getValue()));
+        this.traverse(this.root, node -> clone.put(node.getPoint(), node.getValue()));
 
         return clone;
     }
@@ -196,16 +214,16 @@ public class QuadTree<T> {
      *     return value is irrelevant.
      * @private
      */
-    private Stream<Node<T>> traverse(Node<T> node) {
+    private void traverse(Node<T> node, Consumer<Node<T>> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
-                return Stream.of(node);
+                consumer.accept(node);
+                break;
             case POINTER:
-                return Arrays.stream(Quadrant.values())
-                        .map(node::getChildNode)
-                        .flatMap(this::traverse);
+                node.getChildNodes()
+                        .forEach(childNode -> this.traverse(childNode, consumer));
+                break;
         }
-        return Stream.empty();
     }
 
     /**
@@ -225,7 +243,7 @@ public class QuadTree<T> {
             case LEAF:
                 return node.getPoint().equals(point) ? Optional.of(node) : Optional.empty();
             case POINTER:
-                return this.find(node.getQuadrantNode((point)), point);
+                return this.find(node.getQuadrantNode(point), point);
             default:
                 throw new QuadTreeException("Invalid nodeType");
         }
@@ -298,8 +316,7 @@ public class QuadTree<T> {
                 break;
 
             case POINTER: {
-                List<Node<T>> nonEmptyNodes =  Arrays.stream(Quadrant.values())
-                        .map(node::getChildNode)
+                List<Node<T>> nonEmptyNodes =  node.getChildNodes()
                         .filter(childNode -> childNode.getNodeType() != NodeType.EMPTY)
                         .collect(Collectors.toList());
 

@@ -16,9 +16,11 @@ public class QuadTreeTest {
     {
         quadTree = new QuadTree<>(new Rectangle(0, 0, 100, 100));
         int count = 0;
-        quadTree.put(new Point(1, 1), count++);
-        quadTree.put(new Point(100, 100), count++);
+        quadTree.put(new Point(0, 0), count++);
+        quadTree.put(new Point(0, 2), count++);
+        quadTree.put(new Point(2, 0), count++);
         quadTree.put(new Point(2, 2), count++);
+        quadTree.put(new Point(100, 100), count++);
         quadTree.put(new Point(1, 90), count++);
         quadTree.put(new Point(50, 50), count++);
         quadTree.put(new Point(8, 54), count++);
@@ -30,9 +32,11 @@ public class QuadTreeTest {
     public void testSearchWithinRectangle() throws Exception {
         Set<Integer> set = quadTree.searchWithin(new Rectangle(0, 0, 10, 10)).collect(Collectors.toSet());
 
-        assertEquals(2, set.size());
+        assertEquals(4, set.size());
         assertTrue(set.contains(0));
+        assertTrue(set.contains(1));
         assertTrue(set.contains(2));
+        assertTrue(set.contains(3));
     }
 
     @Test
@@ -40,8 +44,22 @@ public class QuadTreeTest {
         Set<Integer> set = quadTree.searchWithin(new Point(50, 50), 7.5).collect(Collectors.toSet());
 
         assertEquals(3, set.size());
-        assertTrue(set.contains(4));
         assertTrue(set.contains(6));
-        assertTrue(set.contains(7));
+        assertTrue(set.contains(8));
+        assertTrue(set.contains(9));
+    }
+
+    @Test
+    public void testNoResultWithinRectangle()
+    {
+        Set<Integer> set = quadTree.searchWithin(new Rectangle(0.5,0.5, 1.5, 1.5)).collect(Collectors.toSet());
+        assertTrue(set.isEmpty());
+    }
+
+    @Test
+    public void testNoResultWithinCircle()
+    {
+        Set<Integer> set = quadTree.searchWithin(new Point(1, 1), 0.7).collect(Collectors.toSet());
+        assertTrue(set.isEmpty());
     }
 }

@@ -1,11 +1,11 @@
 package com.company.life_simulator.world.quadtree;
 
 import com.company.life_simulator.util.StreamUtil;
+import org.javatuples.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import org.openjdk.jmh.annotations.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -44,11 +44,11 @@ public class QuadTreeBenchmark {
     public void circleIntersectTest()
     {
         Object[] list = null;
-        for (int i = 0; i < 1000000;) {
+        for (int i = 0; i < 10;) {
             list = quadTree.searchWithin(center, radius)
                     .toArray();
         }
-        System.out.println(list);
+        System.out.println(list.length);
     }
 
     @Benchmark
@@ -59,16 +59,18 @@ public class QuadTreeBenchmark {
     }
 
     @Benchmark
-    public List<Integer> rectangleIntersectBenchmark2()
+    public Integer rectangleIntersectBenchmark2()
     {
         return quadTree.searchWithin(new Rectangle(center.getX() - radius, center.getY() - radius, center.getX() + radius, center.getY() + radius))
-                .collect(Collectors.toList());
+                .sorted(Integer::compareTo)
+                .findFirst().get();
     }
 
     @Benchmark
-    public List<Integer> circleIntersectBenchmark()
+    public Integer circleIntersectBenchmark()
     {
         return quadTree.searchWithin(center, radius)
-                .collect(Collectors.toList());
+                .sorted(Integer::compareTo)
+                .findFirst().get();
     }
 }
