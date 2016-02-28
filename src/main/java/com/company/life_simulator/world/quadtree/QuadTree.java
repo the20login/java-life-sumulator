@@ -16,58 +16,43 @@ import java.util.stream.Stream;
 public class QuadTree<T> {
 
 
-    private Node<T> root;
-    private int count_ = 0;
+    private final Node<T> root;
+    private int count = 0;
 
     /**
-     * Constructs a new quad tree.
+     * Creates new instance of tree
      *
-     * @param {double} minX Minimum x-value that can be held in tree.
-     * @param {double} minY Minimum y-value that can be held in tree.
-     * @param {double} maxX Maximum x-value that can be held in tree.
-     * @param {double} maxY Maximum y-value that can be held in tree.
+     * @param rectangle determine area, covered by tree
      */
     public QuadTree(Rectangle rectangle) {
         this.root = new Node<>(rectangle, null);
     }
 
-    /**
-     * Returns a reference to the tree's root node.  Callers shouldn't modify nodes,
-     * directly.  This is a convenience for visualization and debugging purposes.
-     *
-     * @return {Node} The root node.
-     */
-    public Node getRootNode() {
-        return this.root;
-    }
-
-    /**
-     * Sets the value of an (x, y) point within the quad-tree.
-     *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {Object} value The value associated with the point.
-     */
     public void put(Point point, T value) {
 
-        if (!root.getRectangle().isContains(point)) {
+        if (!root.getRectangle().contains(point)) {
             throw new QuadTreeException("Out of bounds: " + point);
         }
         if (this.insert(root, point, value)) {
-            this.count_++;
+            this.count++;
         }
     }
 
     /**
-     * Gets the value of the point at (x, y) or null if the point is empty.
+     * @return Area, covered by tree
+     */
+    public Rectangle getSize()
+    {
+        return root.getRectangle();
+    }
+
+    /**
+     * Gets the value of the point
+     * <br>
+     * Note: this method require absolute precision({@link Point#equals Point.equals}), use {@link #searchWithin} to search with custom precision
      *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @param {Object} opt_default The default value to return if the node doesn't
-     *                 exist.
-     * @return {*} The value of the node, the default value if the node
-     *         doesn't exist, or undefined if the node doesn't exist and no default
-     *         has been provided.
+     * @param point coordinates
+     * @return Optional value at point
      */
     public Optional<T> get(Point point) {
         Optional<Node<T>> optional = this.find(this.root, point);
@@ -75,12 +60,12 @@ public class QuadTree<T> {
     }
 
     /**
-     * Removes a point from (x, y) if it exists.
+     * Removes element from tree. Tree will rebalance itself after removing.
+     * <br>
+     * Note: this method require absolute precision({@link Point#equals Point.equals})
      *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @return {Object} The value of the node that was removed, or null if the
-     *         node doesn't exist.
+     * @param point coordinates
+     * @return Optional removed element, empty if there is no element at provided coordinates
      */
     public Optional<T> remove(Point point) {
         Optional<Node<T>> optional = this.find(this.root, point);
@@ -90,7 +75,7 @@ public class QuadTree<T> {
             node.setPoint(null, null);
             node.setNodeType(NodeType.EMPTY);
             this.balance(node);
-            this.count_--;
+            this.count--;
             return Optional.of(value);
         } else {
             return Optional.empty();
@@ -98,38 +83,41 @@ public class QuadTree<T> {
     }
 
     /**
-     * Returns true if the point at (x, y) exists in the tree.
+     * Checks if there is an element at this point
      *
-     * @param {double} x The x-coordinate.
-     * @param {double} y The y-coordinate.
-     * @return {boolean} Whether the tree contains a point at (x, y).
+     * @param point coordinates
+     * @return True if tree contains element at this point, otherwise false.
      */
     public boolean contains(Point point) {
         return this.get(point).isPresent();
     }
 
     /**
-     * @return {boolean} Whether the tree is empty.
+     * @return Whether the tree is empty.
      */
     public boolean isEmpty() {
         return this.root.getNodeType() == NodeType.EMPTY;
     }
 
     /**
-     * @return {number} The number of items in the tree.
+     * @return The number of elements in the tree.
      */
     public int getCount() {
-        return this.count_;
+        return this.count;
     }
 
     /**
-     * Removes all items from the tree.
+     * Removes all elements from the tree.
      */
     public void clear() {
         root.clear();
-        this.count_ = 0;
+        this.count = 0;
     }
 
+    /**
+     * Returns all elements of the tree
+     * @return Stream of tree elements
+     */
     public Stream<T> getValues() {
         Stream.Builder<Node<T>> streamBuilder = Stream.builder();
         this.traverse(this.root, streamBuilder::add);
@@ -137,6 +125,10 @@ public class QuadTree<T> {
                 .map(Node::getValue);
     }
 
+    /**
+     * Returns elements within rectangle(inclusive)
+     * @return Stream of tree elements
+     */
     public Stream<T> searchWithin(Rectangle rectangle) {
         Stream.Builder<Node<T>> streamBuilder = Stream.builder();
         this.navigate(this.root, rectangle, streamBuilder::add);
@@ -144,6 +136,10 @@ public class QuadTree<T> {
             .map(Node::getValue);
     }
 
+    /**
+     * Returns elements within circle(inclusive)
+     * @return Stream of tree elements
+     */
     public Stream<T> searchWithin(Point point, double radius) {
         Stream.Builder<Node<T>> streamBuilder = Stream.builder();
         this.navigate(this.root, point, radius, streamBuilder::add);
@@ -174,7 +170,7 @@ public class QuadTree<T> {
     private void navigate(Node<T> node, Rectangle rectangle, Consumer<Node<T>> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
-                if (rectangle.isContains(node.getPoint()))
+                if (rectangle.contains(node.getPoint()))
                     consumer.accept(node);
                 break;
             case POINTER:
@@ -204,16 +200,6 @@ public class QuadTree<T> {
         return clone;
     }
 
-    /**
-     * Traverses the tree depth-first, with quadrants being traversed in clockwise
-     * order (NE, SE, SW, NW).  The provided function will be called for each
-     * leaf node that is encountered.
-     * @param {QuadTree.Node} node The current node.
-     * @param {function(QuadTree.Node)} fn The function to call
-     *     for each leaf node. This function takes the node as an argument, and its
-     *     return value is irrelevant.
-     * @private
-     */
     private void traverse(Node<T> node, Consumer<Node<T>> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
@@ -226,16 +212,6 @@ public class QuadTree<T> {
         }
     }
 
-    /**
-     * Finds a leaf node with the same (x, y) coordinates as the target point, or
-     * null if no point exists.
-     * @param {QuadTree.Node} node The node to search in.
-     * @param {number} x The x-coordinate of the point to search for.
-     * @param {number} y The y-coordinate of the point to search for.
-     * @return {QuadTree.Node} The leaf node that matches the target,
-     *     or null if it doesn't exist.
-     * @private
-     */
     private Optional<Node<T>> find(Node<T> node, Point point) {
         switch (node.getNodeType()) {
             case EMPTY:
@@ -249,16 +225,6 @@ public class QuadTree<T> {
         }
     }
 
-    /**
-     * Inserts a point into the tree, updating the tree's structure if necessary.
-     * @param {.QuadTree.Node} parent The parent to insert the point
-     *     into.
-     * @param {QuadTree.Point} point The point to insert.
-     * @return {boolean} True if a new node was added to the tree; False if a node
-     *     already existed with the correpsonding coordinates and had its value
-     *     reset.
-     * @private
-     */
     private boolean insert(Node<T> parent, Point point, T value) {
         Boolean result;
         switch (parent.getNodeType()) {
@@ -285,12 +251,6 @@ public class QuadTree<T> {
         return result;
     }
 
-    /**
-     * Converts a leaf node to a pointer node and reinserts the node's point into
-     * the correct child.
-     * @param {QuadTree.Node} node The node to split.
-     * @private
-     */
     private void split(Node<T> node) {
         Point oldPoint = node.getPoint();
         T oldValue = node.getValue();
@@ -300,12 +260,6 @@ public class QuadTree<T> {
         this.insert(node, oldPoint, oldValue);
     }
 
-    /**
-     * Attempts to balance a node. A node will need balancing if all its children
-     * are empty or it contains just one leaf.
-     * @param {QuadTree.Node} node The node to balance.
-     * @private
-     */
     private void balance(Node<T> node) {
         switch (node.getNodeType()) {
             case EMPTY:
@@ -354,12 +308,6 @@ public class QuadTree<T> {
         }
     }
 
-    /**
-     * Sets the point for a node, as long as the node is a leaf or empty.
-     * @param {QuadTree.Node} node The node to put the point for.
-     * @param {QuadTree.Point} point The point to put.
-     * @private
-     */
     private void setPointForNode(Node<T> node, Point point, T value) {
         if (node.getNodeType() == NodeType.POINTER) {
             throw new QuadTreeException("Can not put point for node of type POINTER");

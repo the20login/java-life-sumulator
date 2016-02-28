@@ -1,8 +1,19 @@
 package com.company.life_simulator.world.quadtree;
 
+/**
+ * Axis-aligned area
+ */
 public class Rectangle {
     private final double x1, y1, x2, y2;
 
+    /**
+     * Creates new instance
+     *
+     * @param x1 top left x coordinate
+     * @param y1 top left y coordinate
+     * @param x2 bottom right x coordinate
+     * @param y2 bottom right y coordinate
+     */
     public Rectangle(double x1, double y1, double x2, double y2) {
         assert x1 <= x2;
         assert y1 <= y2;
@@ -12,11 +23,22 @@ public class Rectangle {
         this.y2 = y2;
     }
 
+    /**
+     * Creates new instance
+     * @param point1 top left point
+     * @param point2 bottom right point
+     */
     public Rectangle(Point point1, Point point2)
     {
         this(point1.getX(), point1.getY(), point2.getX(), point2.getY());
     }
 
+    /**
+     * Creates new instance
+     * @param point top left point
+     * @param width area width
+     * @param height area height
+     */
     public Rectangle(Point point, double width, double height)
     {
         this(point.getX(), point.getY(), point.getX() + width, point.getY() + height);
@@ -57,7 +79,7 @@ public class Rectangle {
         return y2 - y1;
     }
 
-    public boolean isContains(Point point)
+    public boolean contains(Point point)
     {
         return x1 <= point.getX() && x2 >= point.getX()
                 && y1 <= point.getY() && y2 >= point.getY();
@@ -88,7 +110,7 @@ public class Rectangle {
 
     public Quadrant pointInQuadrant(Point point)
     {
-        assert isContains(point);
+        assert contains(point);
         Point center = getCenter();
         if (point.getX() < center.getX()) {
             return point.getY() < center.getY() ? Quadrant.NW : Quadrant.SW;

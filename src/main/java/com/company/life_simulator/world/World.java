@@ -48,7 +48,7 @@ public class World {
 
     public void addDweller(Dweller dweller)
     {
-        if (!size.isContains(dweller.getPosition()))
+        if (!size.contains(dweller.getPosition()))
         {
 
             dweller.setPosition(new Point((dweller.getPosition().getX() + size.getWidth()) % size.getWidth(), (dweller.getPosition().getY() + size.getHeight()) % size.getHeight()));
@@ -63,7 +63,7 @@ public class World {
 
     public void moveDweller(Dweller dweller, Point point)
     {
-        if (!size.isContains(point))
+        if (!size.contains(point))
         {
             point = new Point(point.getX() % size.getWidth(), point.getY() % size.getHeight());
         }
