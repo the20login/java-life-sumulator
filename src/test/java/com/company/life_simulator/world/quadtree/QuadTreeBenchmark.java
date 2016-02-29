@@ -28,7 +28,6 @@ public class QuadTreeBenchmark {
     private final double radius = 1000;
 
     @Setup
-    @Before
     public void init()
     {
         quadTree = new QuadTree<>(new Rectangle(0, 0, worldSize, worldSize));
@@ -38,17 +37,6 @@ public class QuadTreeBenchmark {
         AtomicInteger counter = new AtomicInteger(0);
         StreamUtil.zip(xStream, yStream, Point::new)
                 .forEach(point -> quadTree.put(point, counter.incrementAndGet()));
-    }
-
-    @Test
-    public void circleIntersectTest()
-    {
-        Object[] list = null;
-        for (int i = 0; i < 10;) {
-            list = quadTree.searchWithin(center, radius)
-                    .toArray();
-        }
-        System.out.println(list.length);
     }
 
     @Benchmark

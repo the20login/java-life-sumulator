@@ -1,4 +1,4 @@
-package com.company.life_simulator.ui;
+package com.company.life_simulator;
 
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.WorldBuilder;
