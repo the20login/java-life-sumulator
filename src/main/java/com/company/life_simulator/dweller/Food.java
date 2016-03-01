@@ -1,27 +1,32 @@
 package com.company.life_simulator.dweller;
 
+import com.company.life_simulator.dweller.action.Action;
+import com.company.life_simulator.dweller.action.ActionBreed;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
+
+import java.util.Optional;
 
 public class Food extends Dweller{
     public static final int REPRODUCTION_RATE = Integer.valueOf(System.getProperty("dweller.food.reproductionRate", "30"));
     public static final double REPRODUCTION_RANGE = Double.valueOf(System.getProperty("dweller.food.reproductionRange", "30"));
 
-    public Food(Point position, int currentTick) {
-        super(DwellerType.food, position, currentTick, 0, 0, 0, REPRODUCTION_RATE, REPRODUCTION_RANGE);
+    public Food(Integer id, Point position, int currentTick) {
+        super(DwellerType.food, id, position, currentTick, 0, 0, 0, REPRODUCTION_RATE, REPRODUCTION_RANGE);
     }
 
     @Override
-    public void doAI(int tick, World world) {
+    public Optional<Action> doAI(int tick, World world) {
         if(canReproduce(tick))
         {
-            breed(tick, world);
+            return Optional.of(new ActionBreed(this.getId()));
         }
+        return Optional.empty();
     }
 
     @Override
-    protected Dweller produceChild(Point position, int tick) {
-        return new Food(position, tick);
+    protected Dweller produceChild(Integer id, Point position, int tick) {
+        return new Food(id, position, tick);
     }
 
 

@@ -1,6 +1,7 @@
-package com.company.life_simulator.dweller.Ant;
+package com.company.life_simulator.dweller.ant;
 
 import com.company.life_simulator.dweller.*;
+import com.company.life_simulator.dweller.action.*;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
@@ -18,22 +19,20 @@ public class Ant extends EatingDweller implements IMovingDweller {
 
     private Vector speedVector;
 
-    public Ant(Point position, int currentTick, double initialFood) {
-        super(DwellerType.ant, position, currentTick, VISIBILITY_RANGE, ACTION_RANGE, BASE_SPEED, REPRODUCTION_RATE, REPRODUCTION_RANGE, initialFood, FOOD_CONSUMPTION, FOOD_SATURATION);
+    public Ant(Integer id, Point position, int currentTick, double initialFood) {
+        super(DwellerType.ant, id, position, currentTick, VISIBILITY_RANGE, ACTION_RANGE, BASE_SPEED, REPRODUCTION_RATE, REPRODUCTION_RANGE, initialFood, FOOD_CONSUMPTION, FOOD_SATURATION);
     }
 
     @Override
-    public void doAI(int tick, World world) {
+    public Optional<Action> doAI(int tick, World world) {
         consumeFood();
         if (isStarving())
         {
-            world.removeDweller(this.getPosition());
-            return;
+            return Optional.of(new ActionDie(this.getId()));
         }
         if(canReproduce(tick))
         {
-            breed(tick, world);
-            return;
+            return Optional.of(new ActionBreed(this.getId()));
         }
         Optional<Food> foodOptional = world.getDwellersInRange(getPosition(), getVisibilityRange())
                 .filter(dweller -> dweller.getType().equals(DwellerType.food))
@@ -44,25 +43,23 @@ public class Ant extends EatingDweller implements IMovingDweller {
         if (foodOptional.isPresent())
         {
             Food food = foodOptional.get();
-            if (food.getPosition().squareDistance(this.getPosition()) <= getActionRange())
+            if (food.getPosition().squareDistance(this.getPosition()) <= getSquareActionRange())
             {
-                world.removeDweller(food.getPosition());
-                this.feed(food);
-                return;
+                return Optional.of(new ActionEat(this.getId(), food.getId()));
             }
-            target = food.getPosition();
-            world.moveDweller(this, calculateMove(target));
+            target = calculateMove(food.getPosition());
         }
         else {
             if (speedVector == null)
                 speedVector = getRandomDirection(world.getRandom()).scale(getSpeed());
-            world.moveDweller(this, this.getPosition().delta(speedVector));
+            target = this.getPosition().delta(speedVector);
         }
+        return Optional.of(new ActionMove(this.getId(), target));
     }
 
     @Override
-    protected Dweller produceChild(Point position, int tick) {
-        return new Ant(position, tick, FOOD_SATURATION / 2);
+    protected Dweller produceChild(Integer id, Point position, int tick) {
+        return new Ant(id, position, tick, FOOD_SATURATION / 2);
     }
 
     @Override

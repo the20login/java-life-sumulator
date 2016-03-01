@@ -9,15 +9,20 @@ public interface IMovingDweller {
     double getSpeed();
     double getSquareSpeed();
     Point getPosition();
+    double getActionRange();
 
     //TODO: optimize
     default Point calculateMove(Point target)
     {
         double squareDistance = this.getPosition().squareDistance(target);
-        if (squareDistance <= this.getSquareSpeed())
-            return target;
         Vector targetVector = new Vector(this.getPosition(), target);
-        Vector speedVector = targetVector.scale(this.getSpeed()/targetVector.length());
+        Vector speedVector;
+        if (squareDistance <= this.getSquareSpeed()) {
+            double length = targetVector.length();
+            speedVector = targetVector.scale((length - getActionRange() / 2) / length);
+        }
+        else
+            speedVector = targetVector.scale(this.getSpeed()/targetVector.length());
         return this.getPosition().delta(speedVector);
     }
 

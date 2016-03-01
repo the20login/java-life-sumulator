@@ -11,6 +11,7 @@ public abstract class EatingDweller extends Dweller {
 
     protected EatingDweller(
             DwellerType type,
+            Integer id,
             Point position,
             int currentTick,
             double visibilityRange,
@@ -21,13 +22,13 @@ public abstract class EatingDweller extends Dweller {
             double initialFood,
             double foodConsumption,
             double foodSaturation) {
-        super(type, position, currentTick, visibilityRange, actionRange, baseSpeed, reproductionRate, reproductionRange);
+        super(type, id, position, currentTick, visibilityRange, actionRange, baseSpeed, reproductionRate, reproductionRange);
         this.foodConsumption = foodConsumption;
         this.foodSaturation = foodSaturation;
         this.storedFood = initialFood;
     }
 
-    protected void feed(Food food)
+    public void feed(Food food)
     {
         storedFood = Math.max(storedFood + 25, foodSaturation);
     }
@@ -53,7 +54,7 @@ public abstract class EatingDweller extends Dweller {
     }
 
     @Override
-    protected void breed(int tick, World world) {
+    public void breed(int tick, World world) {
         storedFood -= foodSaturation / 2;
         super.breed(tick, world);
     }

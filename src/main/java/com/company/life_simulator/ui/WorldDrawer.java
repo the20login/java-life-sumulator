@@ -19,7 +19,7 @@ public class WorldDrawer {
         COLOR_MAP.put(DwellerType.ant, Color.BROWN);
     }
 
-    public static void drawWorld(World world, Canvas canvas)
+    public static void drawWorld(World world, Canvas canvas, boolean showVisibilityRange)
     {
         Rectangle size = world.getSize();
         double ratio = Math.min(canvas.getWidth() / size.getWidth(), canvas.getHeight() / size.getHeight());
@@ -30,12 +30,12 @@ public class WorldDrawer {
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, size.getWidth() * ratio, size.getHeight() * ratio);
         world.getDwellers()
-                .forEach(dweller -> drawDweller(gc, dweller, ratio));
+                .forEach(dweller -> drawDweller(gc, dweller, showVisibilityRange, ratio));
     }
 
-    private static void drawDweller(GraphicsContext gc, Dweller dweller, double ratio)
+    private static void drawDweller(GraphicsContext gc, Dweller dweller, boolean showVisibilityRange, double ratio)
     {
-        if (dweller.getVisibilityRange() > 0) {
+        if (showVisibilityRange && dweller.getVisibilityRange() > 0) {
             gc.setStroke(Color.YELLOW);
             double radius = dweller.getVisibilityRange() * ratio / 2;
             gc.strokeOval(dweller.getPosition().getX() * ratio - radius, dweller.getPosition().getY() * ratio - radius, dweller.getVisibilityRange() * ratio, dweller.getVisibilityRange() * ratio);

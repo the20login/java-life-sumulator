@@ -1,8 +1,6 @@
 package com.company.life_simulator.ui;
 
 import com.company.life_simulator.ui.window.Controller;
-import com.company.life_simulator.world.World;
-import com.company.life_simulator.world.WorldBuilder;
 import com.company.life_simulator.world.WorldPlayer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

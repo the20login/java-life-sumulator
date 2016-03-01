@@ -1,11 +1,15 @@
 package com.company.life_simulator.dweller;
 
+import com.company.life_simulator.dweller.action.Action;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
 
+import java.util.Optional;
+
 public abstract class Dweller {
     private final DwellerType type;
+    private final Integer id;
     private final int birthTick;
     private final double visibilityRange;
     private final double actionRange;
@@ -17,6 +21,7 @@ public abstract class Dweller {
     private int lastReproduction;
 
     protected Dweller(DwellerType type,
+                      Integer id,
                       Point position,
                       int currentTick,
                       double visibilityRange,
@@ -26,6 +31,7 @@ public abstract class Dweller {
                       double reproductionRange)
     {
         this.type = type;
+        this.id = id;
         this.position = position;
         birthTick = currentTick;
 
@@ -36,6 +42,10 @@ public abstract class Dweller {
         this.reproductionRate = reproductionRate;
         this.reproductionRange = reproductionRange;
         lastReproduction = currentTick;
+    }
+
+    public Integer getId() {
+        return id;
     }
 
     public int getBirthTick()
@@ -66,6 +76,11 @@ public abstract class Dweller {
         return actionRange;
     }
 
+    public double getSquareActionRange()
+    {
+        return actionRange * actionRange;
+    }
+
     public double getSpeed() {
         return baseSpeed;
     }
@@ -82,22 +97,21 @@ public abstract class Dweller {
         return reproductionRange;
     }
 
-    public abstract void doAI(int tick, World world);
+    public abstract Optional<Action> doAI(int tick, World world);
 
-    protected abstract Dweller produceChild(Point position, int tick);
+    protected abstract Dweller produceChild(Integer id, Point position, int tick);
 
     protected boolean canReproduce(int tick)
     {
         return tick - lastReproduction >= reproductionRate;
     }
 
-    protected void breed(int tick, World world)
+    public void breed(int tick, World world)
     {
-
         Vector childVector = Vector.getUnitVector(world.getRandom().nextDouble() * Math.PI * 2)
                 .scale(world.getRandom().nextDouble() * getReproductionRange());
         Point childPoint = this.getPosition().delta(childVector);
-        world.addDweller(produceChild(childPoint, tick));
+        world.addDweller(produceChild(world.getNextId(), childPoint, tick));
         lastReproduction = tick;
     }
 }

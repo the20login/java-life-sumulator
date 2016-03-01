@@ -15,6 +15,8 @@ import javafx.scene.paint.Color;
 
 public class Controller {
     @FXML
+    public ToggleButton toggleVisibility;
+    @FXML
     private ResizableCanvas canvas;
     @FXML
     private Pane pane;
@@ -61,6 +63,10 @@ public class Controller {
             else
                 player.stop();
         });
+
+        toggleVisibility.selectedProperty().addListener(observable -> {
+            redraw();
+        });
     }
 
     private void onWorldTick()
@@ -73,7 +79,7 @@ public class Controller {
     private void redraw()
     {
         if (world != null)
-            WorldDrawer.drawWorld(world, canvas);
+            WorldDrawer.drawWorld(world, canvas, toggleVisibility.isSelected());
         else
             clearCanvas();
     }

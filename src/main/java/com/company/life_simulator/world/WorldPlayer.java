@@ -1,12 +1,14 @@
 package com.company.life_simulator.world;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class WorldPlayer {
-    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("WorldPlayerWorker-%d").build());
     private World world;
     private final long delay;
     private final TimeUnit unit;

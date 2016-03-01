@@ -1,7 +1,7 @@
 package com.company.life_simulator.world;
 
-import com.company.life_simulator.dweller.Ant.Ant;
 import com.company.life_simulator.dweller.Food;
+import com.company.life_simulator.dweller.ant.Ant;
 import com.company.life_simulator.util.StreamUtil;
 import com.company.life_simulator.world.quadtree.Point;
 
@@ -17,7 +17,7 @@ public class WorldBuilder {
 
         World world = new World(width, height);
 
-        world.addDweller(new Ant(new Point(width/2, height/2), 0, Ant.FOOD_SATURATION / 2));
+        world.addDweller(new Ant(world.getNextId(), new Point(width/2, height/2), 0, Ant.FOOD_SATURATION / 2));
 
         Random random = new Random();
         Stream<Double> xStream = random.doubles(initialFood, 0, width).boxed();
@@ -27,7 +27,7 @@ public class WorldBuilder {
         StreamUtil.zip(
                 StreamUtil.zip(xStream, yStream, Point::new),
                 tickStream,
-                Food::new)
+                (point, integer) -> new Food(world.getNextId(), point, integer))
                 .forEach(world::addDweller);
         return world;
     }
