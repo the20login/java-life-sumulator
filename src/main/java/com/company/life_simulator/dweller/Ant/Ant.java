@@ -25,14 +25,14 @@ public class Ant extends EatingDweller implements IMovingDweller {
 
     @Override
     public Optional<Action> doAI(int tick, World world) {
+        if(canReproduce(tick))
+        {
+            return Optional.of(new ActionBreed(this.getId()));
+        }
         consumeFood();
         if (isStarving())
         {
             return Optional.of(new ActionDie(this.getId()));
-        }
-        if(canReproduce(tick))
-        {
-            return Optional.of(new ActionBreed(this.getId()));
         }
         Optional<Food> foodOptional = world.getDwellersInRange(getPosition(), getVisibilityRange())
                 .filter(dweller -> dweller.getType().equals(DwellerType.food))

@@ -35,7 +35,11 @@ public class Controller {
         this.player = worldPlayer;
         this.world = worldPlayer.getWorld();
         redraw();
-        world.addTickHandler((tick, world1) -> Platform.runLater(this::onWorldTick));
+        world.addTickHandler((tick, world1) -> Platform.runLater(()->{
+            if (world.getDwellersCount() == 0)
+                playButton.setSelected(false);
+            this.onWorldTick();
+        }));
     }
 
     @FXML

@@ -30,7 +30,7 @@ public abstract class EatingDweller extends Dweller {
 
     public void feed(Food food)
     {
-        storedFood = Math.max(storedFood + 25, foodSaturation);
+        storedFood = Math.min(storedFood + 25, foodSaturation);
     }
 
     protected void consumeFood()
