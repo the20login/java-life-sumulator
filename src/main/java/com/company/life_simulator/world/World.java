@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,7 +31,8 @@ public class World {
     private final List<BiConsumer<Integer, World>> handlers = new ArrayList<>();
     private QuadTree<Dweller> quadTree;
     private Map<Integer, Dweller> dwellersMap;
-    private final Random random = new Random();
+    private final Random random;
+    private final EnumMap<ActionType, Consumer<Action>> actionsMap;
 
     private final ForkJoinPool executor = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
@@ -39,6 +41,25 @@ public class World {
         size = new Rectangle(0, 0, width, height);
         quadTree = new QuadTree<>(size);
         dwellersMap = new HashMap<>();
+        random = new Random();
+        actionsMap = new EnumMap<>(ActionType.class);
+        actionsMap.put(ActionType.die, this::processDieAction);
+        actionsMap.put(ActionType.eat, this::processEatAction);
+        actionsMap.put(ActionType.move, this::processMoveAction);
+        actionsMap.put(ActionType.breed, this::processBreedAction);
+    }
+
+    public World(double width, double height, int seed)
+    {
+        size = new Rectangle(0, 0, width, height);
+        quadTree = new QuadTree<>(size);
+        dwellersMap = new HashMap<>();
+        random = new Random(seed);
+        actionsMap = new EnumMap<>(ActionType.class);
+        actionsMap.put(ActionType.die, this::processDieAction);
+        actionsMap.put(ActionType.eat, this::processEatAction);
+        actionsMap.put(ActionType.move, this::processMoveAction);
+        actionsMap.put(ActionType.breed, this::processBreedAction);
     }
 
     public Rectangle getSize() {
@@ -49,83 +70,60 @@ public class World {
     {
         int currentTick = tickCount.incrementAndGet();
 
-        ConcurrentMap<ActionType, ArrayList<Action>> actionsMap = null;
+        List<Action> actions = null;
         try {
-            actionsMap = executor.submit(()-> {
-                return (ConcurrentMap<ActionType, ArrayList<Action>>)dwellersMap.values().stream()
+            actions = executor.submit(()-> {
+                return dwellersMap.values().stream()
                         .parallel()
                         .map(dweller -> dweller.doAI(currentTick, this))
                         .filter(Optional::isPresent)
                         .map(Optional::get)
-                        .collect(Collectors.toConcurrentMap(Action::getType, Lists::newArrayList, (actions, actions2) -> {actions.addAll(actions2); return actions;}));
+                        .collect(Collectors.toList());
             }).get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return;
         }
 
-        if (actionsMap == null)
-            return;
-
-        processDieActions(actionsMap.get(ActionType.die));
-        processEatActions(actionsMap.get(ActionType.eat));
-        processMoveActions(actionsMap.get(ActionType.move));
-        processBreedActions(actionsMap.get(ActionType.breed));
-
+        actions.forEach(action -> {
+                    Consumer<Action> handler = actionsMap.get(action.getType());
+                    handler.accept(action);
+                });
 
         for (BiConsumer<Integer, World> consumer: handlers)
             consumer.accept(currentTick, this);
     }
 
-    private void processDieActions(List<Action> actions)
+    private void processDieAction(Action action)
     {
-        if (actions == null)
-            return;
-        actions.stream()
-                .map(Action::getDwellerId)
-                .map(dwellersMap::get)
-                .forEach(this::removeDweller);
+        this.removeDweller(dwellersMap.get(action.getDwellerId()));
     }
 
-    private void processEatActions(List<Action> actions)
+    private void processEatAction(Action action)
     {
-        if (actions == null)
+        ActionEat actionEat = (ActionEat) action;
+        EatingDweller dweller = (EatingDweller) dwellersMap.get(actionEat.getDwellerId());
+        if (dweller == null)
             return;
-        actions.stream()
-                .map(action -> (ActionEat)action)
-                .forEach(actionEat -> {
-                    EatingDweller dweller = (EatingDweller)dwellersMap.get(actionEat.getDwellerId());
-                    if (dweller == null)
-                        return;
-                    Food food = (Food)dwellersMap.get(actionEat.getFoodId());
-                    if (food == null)
-                        return;
-                    this.removeDweller(food);
-                    dweller.feed(food);
-                });
+        Food food = (Food) dwellersMap.get(actionEat.getFoodId());
+        if (food == null)
+            return;
+        this.removeDweller(food);
+        dweller.feed(food);
     }
 
-    private void processMoveActions(List<Action> actions) {
-        if (actions == null)
+    private void processMoveAction(Action action) {
+        ActionMove actionMove = (ActionMove) action;
+        IMovingDweller dweller = (IMovingDweller) dwellersMap.get(actionMove.getDwellerId());
+        if (dweller == null)
             return;
-        actions.stream()
-                .map(action -> (ActionMove)action)
-                .forEach(actionMove -> {
-                    IMovingDweller dweller = (IMovingDweller)dwellersMap.get(actionMove.getDwellerId());
-                    if (dweller == null)
-                        return;
-                    this.moveDweller((Dweller)dweller, actionMove.getTarget());
-                });
+        this.moveDweller((Dweller) dweller, actionMove.getTarget());
     }
 
-    private void processBreedActions(List<Action> actions) {
-        if (actions == null)
-            return;
-        actions.stream()
-                .map(Action::getDwellerId)
-                .map(dwellersMap::get)
-                .filter(Objects::nonNull)
-                .forEach(dweller -> dweller.breed(tickCount.get(), this));
+    private void processBreedAction(Action action) {
+        Dweller dweller = dwellersMap.get(action.getDwellerId());
+        if (dweller != null)
+            dweller.breed(tickCount.get(), this);
     }
 
     public Integer getNextId() {
