@@ -27,8 +27,7 @@ public class Vector {
 
     public static Vector getUnitVector(double angle)
     {
-        double cos = Math.cos(angle);
-        return new Vector(cos, Math.sqrt(1 - cos * cos));
+        return new Vector(Math.cos(angle*Math.PI*2), Math.sin(angle*Math.PI*2));
     }
 
     public double length() {
