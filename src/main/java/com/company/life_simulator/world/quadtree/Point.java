@@ -39,7 +39,7 @@ public class Point implements Comparable<Point>{
 
     public double distance(Point pos)
     {
-        return Math.sqrt(Math.pow(x - pos.getX(), 2) + Math.pow(y - pos.getY(), 2));
+        return Math.sqrt(squareDistance(pos));
     }
 
     public Point delta(double dx, double dy)

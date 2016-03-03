@@ -6,8 +6,8 @@ import com.company.life_simulator.world.WorldBuilder;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.Properties;
+import java.util.Random;
 
 public class Main{
     private static final Duration PRINT_INTERVAL = Duration.ofSeconds(5);
@@ -23,7 +23,9 @@ public class Main{
     }
 
     public void simulate() throws InterruptedException {
-        World world = WorldBuilder.createWorld();
+        int seed = new Random().nextInt();
+        System.out.println("Seed: " + seed);
+        World world = WorldBuilder.createWorld(seed);
         final Instant[] lastPrint = {Instant.now()};
         world.addTickHandler((tick, world1) -> {
             if (lastPrint[0].plus(PRINT_INTERVAL).isBefore(Instant.now())) {

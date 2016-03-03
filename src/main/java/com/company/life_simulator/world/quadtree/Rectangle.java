@@ -25,91 +25,89 @@ public class Rectangle {
 
     /**
      * Creates new instance
+     *
      * @param point1 top left point
      * @param point2 bottom right point
      */
-    public Rectangle(Point point1, Point point2)
-    {
+    public Rectangle(Point point1, Point point2) {
         this(point1.getX(), point1.getY(), point2.getX(), point2.getY());
     }
 
     /**
      * Creates new instance
-     * @param point top left point
-     * @param width area width
+     *
+     * @param point  top left point
+     * @param width  area width
      * @param height area height
      */
-    public Rectangle(Point point, double width, double height)
-    {
+    public Rectangle(Point point, double width, double height) {
         this(point.getX(), point.getY(), point.getX() + width, point.getY() + height);
     }
 
-    public Point getTopLeft()
-    {
+    public Point getTopLeft() {
         return new Point(x1, y1);
     }
 
-    public Point getTopRight()
-    {
+    public Point getTopRight() {
         return new Point(x2, y1);
     }
 
-    public Point getBottomLeft()
-    {
+    public Point getBottomLeft() {
         return new Point(x1, y2);
     }
 
-    public Point getBottomRight()
-    {
+    public Point getBottomRight() {
         return new Point(x2, y2);
     }
 
-    public Point getCenter()
-    {
+    public Point getCenter() {
         return new Point(x1 + getWidth() / 2, y1 + getHeight() / 2);
     }
 
-    public double getWidth()
-    {
+    public double getWidth() {
         return x2 - x1;
     }
 
-    public double getHeight()
-    {
+    public double getHeight() {
         return y2 - y1;
     }
 
-    public boolean contains(Point point)
-    {
+    public boolean contains(Point point) {
         return x1 <= point.getX() && x2 >= point.getX()
                 && y1 <= point.getY() && y2 >= point.getY();
     }
 
-    public boolean isIntersect(Rectangle rect)
-    {
+    public boolean isIntersect(Rectangle rect) {
         return x1 <= rect.x2 && x2 >= rect.x1
                 && y1 <= rect.y2 && y2 >= rect.y1;
     }
 
-    public boolean isIntersect(Point point, double radius)
-    {
-        double circleDistance_x = Math.abs(point.getX() - point.getX());
-        double circleDistance_y = Math.abs(point.getY() - point.getY());
+    public boolean isIntersect(Point point, double radius) {
+        Point center = getCenter();
+        double circleDistance_x = Math.abs(center.getX() - point.getX());
+        double circleDistance_y = Math.abs(center.getY() - point.getY());
 
-        if (circleDistance_x > (getWidth()/2 + radius)) { return false; }
-        if (circleDistance_y > (getHeight()/2 + radius)) { return false; }
+        if (circleDistance_x > (getWidth() / 2 + radius)) {
+            return false;
+        }
+        if (circleDistance_y > (getHeight() / 2 + radius)) {
+            return false;
+        }
 
-        if (circleDistance_x <= (getWidth()/2)) { return true; }
-        if (circleDistance_y <= (getHeight()/2)) { return true; }
+        if (circleDistance_x <= (getWidth() / 2)) {
+            return true;
+        }
+        if (circleDistance_y <= (getHeight() / 2)) {
+            return true;
+        }
 
-        double cornerDistance_sq = Math.pow(circleDistance_x - getWidth(), 2) +
+        double cornerDistance_sq = Math.pow(circleDistance_x - getWidth()/2, 2) +
                 Math.pow(circleDistance_y - getHeight()/2, 2);
 
         return (cornerDistance_sq <= Math.pow(radius, 2));
     }
 
-    public Quadrant pointInQuadrant(Point point)
-    {
+    public Quadrant pointInQuadrant(Point point) {
         assert contains(point);
         Point center = getCenter();
         if (point.getX() < center.getX()) {
@@ -117,6 +115,21 @@ public class Rectangle {
         } else {
             return point.getY() < center.getY() ? Quadrant.NE : Quadrant.SE;
         }
+    }
+
+    public boolean fitInArea(Rectangle rectangle)
+    {
+        return x1 >= rectangle.x1 && x2 <= rectangle.x2
+                && y1 >= rectangle.y1 && y2 <= rectangle.y2;
+    }
+
+    public boolean fitInArea(Point point, double radius)
+    {
+        double squareRadius = radius * radius;
+        return getTopLeft().squareDistance(point) <= squareRadius
+                && getTopRight().squareDistance(point) <= squareRadius
+                && getBottomLeft().squareDistance(point) <= squareRadius
+                && getBottomRight().squareDistance(point) <= squareRadius;
     }
 
     @Override

@@ -9,17 +9,17 @@ import java.util.Random;
 import java.util.stream.Stream;
 
 public class WorldBuilder {
-    public static World createWorld()
+    public static World createWorld(int seed)
     {
         double width = Double.valueOf(System.getProperty("world.width", "200"));
         double height = Double.valueOf(System.getProperty("world.height", "200"));
         int initialFood = Integer.valueOf(System.getProperty("world.initialFood", "30"));
 
-        World world = new World(width, height);
+        World world = new World(width, height, seed);
 
         world.addDweller(new Ant(world.getNextId(), new Point(width/2, height/2), 0, Ant.FOOD_SATURATION / 2));
 
-        Random random = new Random();
+        Random random = new Random(seed);
         Stream<Double> xStream = random.doubles(initialFood, 0, width).boxed();
         Stream<Double> yStream = random.doubles(initialFood, 0, height).boxed();
         Stream<Integer> tickStream = random.ints(initialFood, -Food.REPRODUCTION_RATE, 0).boxed();

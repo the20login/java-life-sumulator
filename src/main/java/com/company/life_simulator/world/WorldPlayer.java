@@ -2,6 +2,7 @@ package com.company.life_simulator.world;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,7 +50,9 @@ public class WorldPlayer {
 
     private World createWorld()
     {
-        return WorldBuilder.createWorld();
+        int seed = new Random().nextInt();
+        System.out.println("Seed: " + seed);
+        return WorldBuilder.createWorld(800);
     }
 
     private void callTick()

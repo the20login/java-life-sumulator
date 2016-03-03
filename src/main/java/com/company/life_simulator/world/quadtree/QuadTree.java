@@ -130,10 +130,9 @@ public class QuadTree<T> {
      * @return Stream of tree elements
      */
     public Stream<T> searchWithin(Rectangle rectangle) {
-        Stream.Builder<Node<T>> streamBuilder = Stream.builder();
+        Stream.Builder<T> streamBuilder = Stream.builder();
         this.navigate(this.root, rectangle, streamBuilder::add);
-        return streamBuilder.build()
-            .map(Node::getValue);
+        return streamBuilder.build();
     }
 
     /**
@@ -141,17 +140,16 @@ public class QuadTree<T> {
      * @return Stream of tree elements
      */
     public Stream<T> searchWithin(Point point, double radius) {
-        Stream.Builder<Node<T>> streamBuilder = Stream.builder();
+        Stream.Builder<T> streamBuilder = Stream.builder();
         this.navigate(this.root, point, radius, streamBuilder::add);
-        return streamBuilder.build()
-            .map(Node::getValue);
+        return streamBuilder.build();
     }
 
-    private void navigate(Node<T> node, Point point, double radius, Consumer<Node<T>> consumer) {
+    private void navigate(Node<T> node, Point point, double radius, Consumer<T> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
                 if (node.getPoint().withinCircle(point, radius))
-                    consumer.accept(node);
+                    consumer.accept(node.getValue());
                 break;
             case POINTER:
                 //looks ugly, but works 1.5 times faster, than enumMap/Array/Stream
@@ -167,11 +165,11 @@ public class QuadTree<T> {
         }
     }
 
-    private void navigate(Node<T> node, Rectangle rectangle, Consumer<Node<T>> consumer) {
+    private void navigate(Node<T> node, Rectangle rectangle, Consumer<T> consumer) {
         switch (node.getNodeType()) {
             case LEAF:
                 if (rectangle.contains(node.getPoint()))
-                    consumer.accept(node);
+                    consumer.accept(node.getValue());
                 break;
             case POINTER:
                 //looks ugly, but works 1.5 times faster, than enumMap/Array/Stream
