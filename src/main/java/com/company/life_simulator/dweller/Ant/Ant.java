@@ -5,8 +5,12 @@ import com.company.life_simulator.dweller.action.*;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
+import org.javatuples.Pair;
+import org.javatuples.Triplet;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Ant extends EatingDweller implements IMovingDweller {
     public static final int REPRODUCTION_RATE = Integer.valueOf(System.getProperty("dweller.ant.reproductionRate", "20"));
@@ -32,24 +36,31 @@ public class Ant extends EatingDweller implements IMovingDweller {
         consumeFood();
         if (isStarving())
         {
+            speedVector = null;
             return Optional.of(new ActionDie(this.getId()));
         }
-        Optional<Food> foodOptional = world.getDwellersInRange(getPosition(), getVisibilityRange())
-                .filter(dweller -> dweller.getType().equals(DwellerType.food))
+        List<Dweller> dwellers = world.getDwellersInRange(getPosition(), getVisibilityRange());
+        Optional<Food> foodOptional = dwellers.stream()
+                .filter(dweller -> dweller.getType() == DwellerType.food)
+                .filter(dweller -> this.getPosition().distance(dweller.getPosition()) <= this.getActionRange())
                 .map(dweller -> (Food)dweller)
-                .findFirst();
+                .findAny();
 
-        Point target;
         if (foodOptional.isPresent())
         {
-            Food food = foodOptional.get();
-            if (food.getPosition().squareDistance(this.getPosition()) <= getSquareActionRange())
-            {
-                return Optional.of(new ActionEat(this.getId(), food.getId()));
-            }
-            target = calculateMove(food.getPosition());
+            speedVector = null;
+            return Optional.of(new ActionEat(this.getId(), foodOptional.get().getId()));
         }
-        else {
+
+        Optional<Vector> directionVector = chooseDirection(dwellers);
+
+        Point target;
+        if (directionVector.isPresent())
+        {
+            target = calculateMove(this.getPosition().delta(directionVector.get()));
+        }
+        else
+        {
             if (speedVector == null)
                 speedVector = getRandomDirection(world.getRandom()).scale(getSpeed());
             target = this.getPosition().delta(speedVector);
@@ -65,5 +76,58 @@ public class Ant extends EatingDweller implements IMovingDweller {
     @Override
     public double getSquareSpeed() {
         return getSpeed() * getSpeed();
+    }
+
+    //TODO: optimize
+    public Optional<Vector> chooseDirection(List<Dweller> dwellers)
+    {
+        List<Triplet<Vector, DwellerType, Double>> vectors = dwellers.stream()
+                .map(dweller -> {
+                    double coefficient;
+                    if (dweller.getType() == DwellerType.ant)
+                        coefficient = -2;
+                    else
+                        coefficient = 4;
+                    Vector vector = new Vector(getPosition(), dweller.getPosition());
+                    return Triplet.with(vector, dweller.getType(), coefficient / vector.squareLength());
+                })
+                .collect(Collectors.toList());
+
+        Optional<Vector> foodVector = vectors.stream()
+                .filter(pair -> pair.getValue1() == DwellerType.food)
+                .map(current -> {
+                    double weight = vectors.stream()
+                            .map(triplet -> {
+                                double angle = Math.abs(triplet.getValue0().angle() - current.getValue0().angle());
+                                if (angle > 0.5)
+                                    angle -= 0.5;
+                                return Pair.with(0.25 - angle, triplet.getValue2());
+                            })
+                            .filter(triplet -> triplet.getValue0() > 0)
+                            .map(pair -> pair.getValue0() * pair.getValue1())
+                            .mapToDouble(Double::doubleValue)
+                            .sum();
+                    return Pair.with(current.getValue0(), weight);
+                })
+                .sorted((o1, o2) -> -Double.compare(o1.getValue1(), o2.getValue1()))
+                .map(Pair::getValue0)
+                .findFirst();
+
+        if (foodVector.isPresent())
+            return foodVector;
+
+        Vector resultVector = vectors.stream()
+                .map(Triplet::getValue0)
+                .reduce(new Vector(0, 0), Vector::plus)
+                .scale(-1);
+
+        if (resultVector.isZeroVector())
+            return Optional.empty();
+
+        if (resultVector.squareLength() < getSquareSpeed())
+        {
+            resultVector = resultVector.scale(this.getSpeed() / resultVector.length());
+        }
+        return Optional.of(resultVector);
     }
 }

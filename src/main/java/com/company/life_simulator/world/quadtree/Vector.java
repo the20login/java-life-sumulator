@@ -47,14 +47,27 @@ public class Vector {
     }
 
     public double angle() {
-        return Math.atan2(y, x);
+        double angle = Math.atan2(y, x)/(Math.PI*2);
+        if (angle < 0)
+            angle += 1;
+        return angle;
     }
 
     public Vector rotate(double newAngle)
     {
         double length = this.length();
 
-        return new Vector(length * Math.cos(newAngle), length * Math.sin(newAngle));
+        return new Vector(length * Math.cos(newAngle*Math.PI*2), length * Math.sin(newAngle*Math.PI*2));
+    }
+
+    public boolean isZeroVector()
+    {
+        return x== 0 && y == 0;
+    }
+
+    public Vector plus(Vector other)
+    {
+        return new Vector(this.x + other.x, this.y + other.y);
     }
 
     @Override

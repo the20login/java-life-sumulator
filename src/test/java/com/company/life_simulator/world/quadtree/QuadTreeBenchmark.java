@@ -1,16 +1,11 @@
 package com.company.life_simulator.world.quadtree;
 
 import com.company.life_simulator.util.StreamUtil;
-import org.javatuples.Pair;
-import org.junit.Before;
-import org.junit.Test;
 import org.openjdk.jmh.annotations.*;
 
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @BenchmarkMode(Mode.AverageTime)

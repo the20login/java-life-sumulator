@@ -2,7 +2,7 @@ package com.company.life_simulator.world.quadtree;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class VectorTest {
 

@@ -12,10 +12,8 @@ import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.QuadTree;
 import com.company.life_simulator.world.quadtree.Rectangle;
 import com.google.common.collect.Lists;
-import org.javatuples.Pair;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,8 +27,8 @@ public class World {
     private final AtomicInteger tickCount = new AtomicInteger(0);
     private final AtomicInteger idGenerator = new AtomicInteger(0);
     private final List<BiConsumer<Integer, World>> handlers = new ArrayList<>();
-    private QuadTree<Dweller> quadTree;
-    private Map<Integer, Dweller> dwellersMap;
+    private final QuadTree<Dweller> quadTree;
+    private final Map<Integer, Dweller> dwellersMap;
     private final Random random;
     private final EnumMap<ActionType, Consumer<Action>> actionsMap;
 
@@ -70,7 +68,7 @@ public class World {
     {
         int currentTick = tickCount.incrementAndGet();
 
-        List<Action> actions = null;
+        List<Action> actions;
         try {
             actions = executor.submit(()-> {
                 return dwellersMap.values().stream()
@@ -172,13 +170,11 @@ public class World {
         return dwellersMap.size();
     }
 
-    public Stream<Dweller> getDwellersInRange(Point point, double range)
+    public List<Dweller> getDwellersInRange(Point point, double range)
     {
         return quadTree.searchWithin(point, range)
                 .filter(dweller -> !dweller.getPosition().equals(point))
-                .map(dweller -> Pair.with(dweller, point.squareDistance(dweller.getPosition())))
-                .sorted((o1, o2) -> o1.getValue1().compareTo(o2.getValue1()))
-                .map(Pair::getValue0);
+                .collect(Collectors.toList());
     }
 
     public int getCurrentTick()

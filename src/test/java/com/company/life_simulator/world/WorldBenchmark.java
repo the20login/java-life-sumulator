@@ -8,8 +8,8 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-@BenchmarkMode(Mode.AverageTime)
-@OutputTimeUnit(TimeUnit.MICROSECONDS)
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Thread)
 @Fork(value = 5, jvmArgs = {"-XX:+AggressiveOpts"})
 @Warmup(iterations = 10)
@@ -38,14 +38,4 @@ public class WorldBenchmark {
         world.tick();
         return world.getDwellers();
     }
-
-    /*@Test
-    public void tickTest()
-    {
-        for (int i = 0; i< 10; i++) {
-            world.tick();
-            System.out.println(world.getDwellers().count());
-        }
-    }*/
-
 }

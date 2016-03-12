@@ -6,7 +6,8 @@ import org.junit.Test;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class QuadTreeTest {
     private QuadTree<Integer> quadTree;
@@ -26,6 +27,7 @@ public class QuadTreeTest {
         quadTree.put(new Point(8, 54), count++);
         quadTree.put(new Point(55, 45), count++);
         quadTree.put(new Point(45, 55), count++);
+        quadTree.put(new Point(50, 57.6), count++);
     }
 
     @Test
