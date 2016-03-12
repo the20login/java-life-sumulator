@@ -36,28 +36,28 @@ public class Ant extends EatingDweller implements IMovingDweller {
         consumeFood();
         if (isStarving())
         {
-            speedVector = null;
             return Optional.of(new ActionDie(this.getId()));
         }
         List<Dweller> dwellers = world.getDwellersInRange(getPosition(), getVisibilityRange());
-        Optional<Food> foodOptional = dwellers.stream()
+        Optional<Food> nearFoodOptional = dwellers.stream()
                 .filter(dweller -> dweller.getType() == DwellerType.food)
                 .filter(dweller -> this.getPosition().distance(dweller.getPosition()) <= this.getActionRange())
                 .map(dweller -> (Food)dweller)
                 .findAny();
 
+        if (nearFoodOptional.isPresent())
+        {
+            speedVector = null;
+            return Optional.of(new ActionEat(this.getId(), nearFoodOptional.get().getId()));
+        }
+
+        Optional<Vector> foodOptional = chooseDirection(dwellers);
+
+        Point target;
         if (foodOptional.isPresent())
         {
             speedVector = null;
-            return Optional.of(new ActionEat(this.getId(), foodOptional.get().getId()));
-        }
-
-        Optional<Vector> directionVector = chooseDirection(dwellers);
-
-        Point target;
-        if (directionVector.isPresent())
-        {
-            target = calculateMove(this.getPosition().delta(directionVector.get()));
+            target = calculateMove(this.getPosition().delta(foodOptional.get()));
         }
         else
         {
@@ -81,6 +81,13 @@ public class Ant extends EatingDweller implements IMovingDweller {
     //TODO: optimize
     public Optional<Vector> chooseDirection(List<Dweller> dwellers)
     {
+        long foodCount = dwellers.stream()
+                .filter(dweller -> dweller.getType().equals(DwellerType.food))
+                .count();
+
+        if (foodCount == 0)
+            return Optional.empty();
+
         List<Triplet<Vector, DwellerType, Double>> vectors = dwellers.stream()
                 .map(dweller -> {
                     double coefficient;
@@ -93,7 +100,7 @@ public class Ant extends EatingDweller implements IMovingDweller {
                 })
                 .collect(Collectors.toList());
 
-        Optional<Vector> foodVector = vectors.stream()
+        return vectors.stream()
                 .filter(pair -> pair.getValue1() == DwellerType.food)
                 .map(current -> {
                     double weight = vectors.stream()
@@ -112,22 +119,5 @@ public class Ant extends EatingDweller implements IMovingDweller {
                 .sorted((o1, o2) -> -Double.compare(o1.getValue1(), o2.getValue1()))
                 .map(Pair::getValue0)
                 .findFirst();
-
-        if (foodVector.isPresent())
-            return foodVector;
-
-        Vector resultVector = vectors.stream()
-                .map(Triplet::getValue0)
-                .reduce(new Vector(0, 0), Vector::plus)
-                .scale(-1);
-
-        if (resultVector.isZeroVector())
-            return Optional.empty();
-
-        if (resultVector.squareLength() < getSquareSpeed())
-        {
-            resultVector = resultVector.scale(this.getSpeed() / resultVector.length());
-        }
-        return Optional.of(resultVector);
     }
 }
