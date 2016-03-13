@@ -21,6 +21,10 @@ public class Ant extends EatingDweller implements IMovingDweller {
     public static final double FOOD_CONSUMPTION = Double.valueOf(System.getProperty("dweller.ant.foodConsumption", "1"));
     public static final double FOOD_SATURATION = Double.valueOf(System.getProperty("dweller.ant.foodSaturation", "50"));
 
+    public static final double DIRECTION_DECISION_ANGLE = Double.valueOf(System.getProperty("dweller.ant.ai.direction_decision_angle", "0.25"));
+    public static final double DIRECTION_DECISION_FOOD_COEFFICIENT = Double.valueOf(System.getProperty("dweller.ant.ai.food_coefficient", "4"));
+    public static final double DIRECTION_DECISION_ANT_COEFFICIENT = Double.valueOf(System.getProperty("dweller.ant.ai.ant_coefficient", "-2"));
+
     private Vector speedVector;
 
     public Ant(Integer id, Point position, int currentTick, double initialFood) {
@@ -92,9 +96,9 @@ public class Ant extends EatingDweller implements IMovingDweller {
                 .map(dweller -> {
                     double coefficient;
                     if (dweller.getType() == DwellerType.ant)
-                        coefficient = -2;
+                        coefficient = DIRECTION_DECISION_ANT_COEFFICIENT;
                     else
-                        coefficient = 4;
+                        coefficient = DIRECTION_DECISION_FOOD_COEFFICIENT;
                     Vector vector = new Vector(getPosition(), dweller.getPosition());
                     return Triplet.with(vector, dweller.getType(), coefficient / vector.squareLength());
                 })
@@ -108,7 +112,7 @@ public class Ant extends EatingDweller implements IMovingDweller {
                                 double angle = Math.abs(triplet.getValue0().angle() - current.getValue0().angle());
                                 if (angle > 0.5)
                                     angle -= 0.5;
-                                return Pair.with(0.25 - angle, triplet.getValue2());
+                                return Pair.with(DIRECTION_DECISION_ANGLE - angle, triplet.getValue2());
                             })
                             .filter(triplet -> triplet.getValue0() > 0)
                             .map(pair -> pair.getValue0() * pair.getValue1())
