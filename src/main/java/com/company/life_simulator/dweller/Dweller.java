@@ -114,4 +114,9 @@ public abstract class Dweller {
         world.addDweller(produceChild(world.getNextId(), childPoint, tick));
         lastReproduction = tick;
     }
+
+    @Override
+    public String toString() {
+        return String.format("[%s, %s]", getPosition(), getType());
+    }
 }

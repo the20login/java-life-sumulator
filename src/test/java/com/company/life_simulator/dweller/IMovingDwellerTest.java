@@ -14,6 +14,6 @@ public class IMovingDwellerTest {
         Ant actor = new Ant(0, new Point(0, 0), 0, 1);
         Point moveRight = actor.calculateMove(new Point(10, 0));
         assertEquals(3, moveRight.getX(), 0);
-        assertEquals(0, moveRight.getX(), 0);
+        assertEquals(0, moveRight.getY(), 0);
     }
 }
