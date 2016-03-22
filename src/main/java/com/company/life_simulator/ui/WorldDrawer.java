@@ -37,8 +37,8 @@ public class WorldDrawer {
     {
         if (showVisibilityRange && dweller.getVisibilityRange() > 0) {
             gc.setStroke(Color.YELLOW);
-            double radius = dweller.getVisibilityRange() * ratio / 2;
-            gc.strokeOval(dweller.getPosition().getX() * ratio - radius, dweller.getPosition().getY() * ratio - radius, dweller.getVisibilityRange() * ratio, dweller.getVisibilityRange() * ratio);
+            double radius = dweller.getVisibilityRange() * ratio;
+            gc.strokeOval(dweller.getPosition().getX() * ratio - radius, dweller.getPosition().getY() * ratio - radius, radius * 2 , radius * 2);
         }
         gc.setFill(COLOR_MAP.get(dweller.getType()));
         gc.fillRect(dweller.getPosition().getX() * ratio, dweller.getPosition().getY() * ratio, ratio, ratio);
