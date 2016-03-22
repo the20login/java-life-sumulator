@@ -3,6 +3,7 @@ package com.company.life_simulator.dweller.ant;
 import com.company.life_simulator.dweller.Dweller;
 import com.company.life_simulator.dweller.DwellerType;
 import com.company.life_simulator.dweller.Food;
+import com.company.life_simulator.dweller.ant.ai.AngleDistanceAI;
 import com.company.life_simulator.util.StreamUtil;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
@@ -48,6 +49,6 @@ public class DirectionDecisionBenchmark {
     @Benchmark
     public Vector directionDecisionBenchmark()
     {
-        return self.chooseDirection(dwellers).get();
+        return AngleDistanceAI.chooseDirection(self.getPosition(), dwellers).get();
     }
 }

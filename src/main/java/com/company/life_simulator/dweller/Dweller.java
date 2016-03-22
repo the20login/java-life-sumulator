@@ -85,6 +85,10 @@ public abstract class Dweller {
         return baseSpeed;
     }
 
+    public double getSquareSpeed() {
+        return getSpeed() * getSpeed();
+    }
+
     public double getBaseSpeed() {
         return baseSpeed;
     }

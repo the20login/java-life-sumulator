@@ -33,12 +33,12 @@ public abstract class EatingDweller extends Dweller {
         storedFood = Math.min(storedFood + 25, foodSaturation);
     }
 
-    protected void consumeFood()
+    public void consumeFood()
     {
         storedFood -= foodConsumption;
     }
 
-    protected boolean isStarving()
+    public boolean isStarving()
     {
         return storedFood <= 0;
     }
@@ -49,7 +49,7 @@ public abstract class EatingDweller extends Dweller {
     }
 
     @Override
-    protected boolean canReproduce(int tick) {
+    public boolean canReproduce(int tick) {
         return super.canReproduce(tick) && isSaturated();
     }
 

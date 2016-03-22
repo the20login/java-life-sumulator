@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Datastructure: A point Quad Tree for representing 2D data. Each
+ * Data structure: A point Quad Tree for representing 2D data. Each
  * region has the same ratio as the bounds for the tree.
  * <p/>
  * The implementation currently requires pre-determined bounds for data as it
