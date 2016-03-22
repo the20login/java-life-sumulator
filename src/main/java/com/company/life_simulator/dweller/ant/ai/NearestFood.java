@@ -8,13 +8,14 @@ import com.company.life_simulator.dweller.ant.IAntMemory;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
+import org.javatuples.Pair;
 
 import java.util.Optional;
 
 public class NearestFood implements IAntAI {
     @Override
     public IAntMemory createMemory() {
-        return null;
+        return new NearestFoodMemory();
     }
 
     @Override
@@ -30,7 +31,9 @@ public class NearestFood implements IAntAI {
         }
         Optional<Food> foodOptional = world.getDwellersInRange(self.getPosition(), self.getVisibilityRange()).stream()
                 .filter(dweller -> dweller.getType().equals(DwellerType.food))
-                .map(dweller -> (Food)dweller)
+                .map(food -> org.javatuples.Pair.with(self.getPosition().distance(food.getPosition()), (Food)food))
+                .sorted((pair1, pair2) -> Double.compare(pair1.getValue0(), pair2.getValue0()))
+                .map(Pair::getValue1)
                 .findFirst();
 
         NearestFoodMemory memory = (NearestFoodMemory) antMemory;
