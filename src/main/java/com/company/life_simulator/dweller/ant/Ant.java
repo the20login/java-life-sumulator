@@ -6,6 +6,7 @@ import com.company.life_simulator.dweller.EatingDweller;
 import com.company.life_simulator.dweller.IMovingDweller;
 import com.company.life_simulator.dweller.action.Action;
 import com.company.life_simulator.dweller.ant.ai.AntAIType;
+import com.company.life_simulator.dweller.ant.ai.IAntAI;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 
@@ -21,18 +22,16 @@ public class Ant extends EatingDweller implements IMovingDweller {
     public static final double FOOD_SATURATION = Double.valueOf(System.getProperty("dweller.ant.foodSaturation", "50"));
     public static final AntAIType AI_TYPE = AntAIType.valueOf(System.getProperty("dweller.ant.ai.type", "angleDistance"));
 
-    private final AntAIType aiType;
-    private final IAntMemory memory;
+    private final IAntAI aiImplementation;
 
     public Ant(Integer id, Point position, int currentTick, double initialFood) {
         super(DwellerType.ant, id, position, currentTick, VISIBILITY_RANGE, ACTION_RANGE, BASE_SPEED, REPRODUCTION_RATE, REPRODUCTION_RANGE, initialFood, FOOD_CONSUMPTION, FOOD_SATURATION);
-        this.aiType = AI_TYPE;
-        this.memory = aiType.getAiImplementation().createMemory();
+        aiImplementation = AI_TYPE.createAiImplementationInstance();
     }
 
     @Override
     public Optional<Action> doAI(int tick, World world) {
-        return aiType.getAiImplementation().doAI(this, memory, tick, world);
+        return aiImplementation.doAI(this, tick, world);
     }
 
     @Override

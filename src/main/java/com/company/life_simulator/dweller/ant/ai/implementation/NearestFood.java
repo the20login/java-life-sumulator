@@ -1,10 +1,14 @@
-package com.company.life_simulator.dweller.ant.ai;
+package com.company.life_simulator.dweller.ant.ai.implementation;
 
 import com.company.life_simulator.dweller.DwellerType;
 import com.company.life_simulator.dweller.Food;
-import com.company.life_simulator.dweller.action.*;
+import com.company.life_simulator.dweller.action.Action;
+import com.company.life_simulator.dweller.action.ActionBreed;
+import com.company.life_simulator.dweller.action.ActionDie;
+import com.company.life_simulator.dweller.action.ActionEat;
+import com.company.life_simulator.dweller.action.ActionMove;
 import com.company.life_simulator.dweller.ant.Ant;
-import com.company.life_simulator.dweller.ant.IAntMemory;
+import com.company.life_simulator.dweller.ant.ai.IAntAI;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
@@ -12,14 +16,12 @@ import org.javatuples.Pair;
 
 import java.util.Optional;
 
-public class NearestFood implements IAntAI {
-    @Override
-    public IAntMemory createMemory() {
-        return new NearestFoodMemory();
-    }
+public class NearestFood implements IAntAI
+{
+    private Vector speedVector;
 
     @Override
-    public Optional<Action> doAI(Ant self, IAntMemory antMemory, int tick, World world) {
+    public Optional<Action> doAI(Ant self, int tick, World world) {
         if(self.canReproduce(tick))
         {
             return Optional.of(new ActionBreed(self.getId()));
@@ -36,11 +38,10 @@ public class NearestFood implements IAntAI {
                 .map(Pair::getValue1)
                 .findFirst();
 
-        NearestFoodMemory memory = (NearestFoodMemory) antMemory;
         Point target;
         if (foodOptional.isPresent())
         {
-            memory.speedVector = null;
+            speedVector = null;
             Food food = foodOptional.get();
             if (food.getPosition().squareDistance(self.getPosition()) <= self.getSquareActionRange())
             {
@@ -49,20 +50,15 @@ public class NearestFood implements IAntAI {
             target = self.calculateMove(food.getPosition());
         }
         else {
-            if (memory.speedVector == null)
-                memory.speedVector = self.getRandomDirection(world.getRandom()).scale(self.getSpeed());
-            target = self.getPosition().delta(memory.speedVector);
+            if (speedVector == null)
+                speedVector = self.getRandomDirection(world.getRandom()).scale(self.getSpeed());
+            target = self.getPosition().delta(speedVector);
         }
         return Optional.of(new ActionMove(self.getId(), target));
     }
 
-    private static class NearestFoodMemory implements IAntMemory
-    {
-        Vector speedVector;
-
-        @Override
-        public String toString() {
-            return String.format("[SpeedVector: %s]", speedVector);
-        }
+    @Override
+    public String toString() {
+        return String.format("[NearestFoodAI; SpeedVector: %s]", speedVector);
     }
 }

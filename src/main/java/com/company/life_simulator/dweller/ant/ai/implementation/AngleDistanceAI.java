@@ -1,11 +1,15 @@
-package com.company.life_simulator.dweller.ant.ai;
+package com.company.life_simulator.dweller.ant.ai.implementation;
 
 import com.company.life_simulator.dweller.Dweller;
 import com.company.life_simulator.dweller.DwellerType;
 import com.company.life_simulator.dweller.Food;
-import com.company.life_simulator.dweller.action.*;
+import com.company.life_simulator.dweller.action.Action;
+import com.company.life_simulator.dweller.action.ActionBreed;
+import com.company.life_simulator.dweller.action.ActionDie;
+import com.company.life_simulator.dweller.action.ActionEat;
+import com.company.life_simulator.dweller.action.ActionMove;
 import com.company.life_simulator.dweller.ant.Ant;
-import com.company.life_simulator.dweller.ant.IAntMemory;
+import com.company.life_simulator.dweller.ant.ai.IAntAI;
 import com.company.life_simulator.world.World;
 import com.company.life_simulator.world.quadtree.Point;
 import com.company.life_simulator.world.quadtree.Vector;
@@ -16,18 +20,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class AngleDistanceAI implements IAntAI{
+public class AngleDistanceAI implements IAntAI
+{
     public static final double DIRECTION_DECISION_ANGLE = Double.valueOf(System.getProperty("dweller.ant.ai.angle_distance.direction_decision_angle", "0.25"));
     public static final double DIRECTION_DECISION_FOOD_COEFFICIENT = Double.valueOf(System.getProperty("dweller.ant.ai.angle_distance.food_coefficient", "4"));
     public static final double DIRECTION_DECISION_ANT_COEFFICIENT = Double.valueOf(System.getProperty("dweller.ant.ai.angle_distance.ant_coefficient", "-2"));
 
-    @Override
-    public IAntMemory createMemory() {
-        return new AngleDistanceMemory();
-    }
+    private Vector speedVector;
 
     @Override
-    public Optional<Action> doAI(Ant self, IAntMemory antMemory, int tick, World world) {
+    public Optional<Action> doAI(Ant self, int tick, World world) {
         if(self.canReproduce(tick))
         {
             return Optional.of(new ActionBreed(self.getId()));
@@ -44,10 +46,9 @@ public class AngleDistanceAI implements IAntAI{
                 .map(dweller -> (Food)dweller)
                 .findAny();
 
-        AngleDistanceMemory memory = (AngleDistanceMemory) antMemory;
         if (nearFoodOptional.isPresent())
         {
-            memory.speedVector = null;
+            speedVector = null;
             return Optional.of(new ActionEat(self.getId(), nearFoodOptional.get().getId()));
         }
 
@@ -56,14 +57,14 @@ public class AngleDistanceAI implements IAntAI{
         Point target;
         if (foodOptional.isPresent())
         {
-            memory.speedVector = null;
+            speedVector = null;
             target = self.calculateMove(self.getPosition().delta(foodOptional.get()));
         }
         else
         {
-            if (memory.speedVector == null)
-                memory.speedVector = self.getRandomDirection(world.getRandom()).scale(self.getSpeed());
-            target = self.getPosition().delta(memory.speedVector);
+            if (speedVector == null)
+                speedVector = self.getRandomDirection(world.getRandom()).scale(self.getSpeed());
+            target = self.getPosition().delta(speedVector);
         }
         return Optional.of(new ActionMove(self.getId(), target));
     }
@@ -110,13 +111,8 @@ public class AngleDistanceAI implements IAntAI{
                 .findFirst();
     }
 
-    private static class AngleDistanceMemory implements IAntMemory
-    {
-        Vector speedVector;
-
-        @Override
-        public String toString() {
-            return String.format("[SpeedVector: %s]", speedVector);
-        }
+    @Override
+    public String toString() {
+        return String.format("[AngleDistanceAI; SpeedVector: %s]", speedVector);
     }
 }
